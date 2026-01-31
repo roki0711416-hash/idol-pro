@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>所持品</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="page">
+    <div class="container">
+      <header class="header" aria-label="ヘッダー">
+        <div>
+          <h1 class="header-title">所持品</h1>
+          <a class="linkrow" href="./dashboard.html">← プロデューサーダッシュボードへ戻る</a>
+        </div>
+        <div class="header-right">
+          <div class="wallet" aria-label="所持表示">
+            <span>コイン</span> <strong id="coins">0</strong>
+            <span>ジェム</span> <strong id="gems">0</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="card" aria-label="準備中">
+        <h2 class="h1" style="font-size: 18px;">準備中</h2>
+        <p class="subtext">所持品ページは準備中です。</p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var role = localStorage.getItem('role') || localStorage.getItem('idol-pro:role');
+      if (role !== 'producer') {
+        window.location.replace('./index.html');
+        return;
+      }
+      if (localStorage.getItem('coins') === null) localStorage.setItem('coins', '0');
+      if (localStorage.getItem('gems') === null) localStorage.setItem('gems', '0');
+      var coins = parseInt(localStorage.getItem('coins') || '0', 10);
+      var gems = parseInt(localStorage.getItem('gems') || '0', 10);
+      if (!Number.isFinite(coins)) coins = 0;
+      if (!Number.isFinite(gems)) gems = 0;
+      var coinsEl = document.getElementById('coins');
+      var gemsEl = document.getElementById('gems');
+      if (coinsEl) coinsEl.textContent = String(Math.max(0, coins));
+      if (gemsEl) gemsEl.textContent = String(Math.max(0, gems));
+    })();
+  </script>
+</body>
+</html>

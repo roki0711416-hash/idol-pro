@@ -3,79 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ダッシュボード（producer）</title>
+  <title>プロデューサーダッシュボード</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <main class="page">
-    <div class="wrap">
-      <div class="topbar" aria-label="ヘッダー">
+    <div class="container">
+      <header class="header" aria-label="ヘッダー">
         <div>
-          <div class="brand">アイドル育成プラットフォーム</div>
+          <h1 class="header-title">プロデューサーダッシュボード</h1>
           <a class="linkrow" href="./index.html">← ロール選択へ</a>
         </div>
-        <div class="topbar-right">
-          <div class="wallet" aria-label="ログイン情報">
-            <span>role</span> <strong id="role">-</strong>
-            <span>name</span> <strong id="name">-</strong>
+        <div class="header-right">
+          <div class="wallet" aria-label="所持表示">
+            <span>コイン</span> <strong id="coins">0</strong>
+            <span>ジェム</span> <strong id="gems">0</strong>
           </div>
         </div>
-      </div>
+      </header>
 
-      <section class="card" aria-label="ダッシュボード">
-        <h1 class="h1">ダッシュボード（producer）</h1>
+      <section class="card" aria-label="メニュー">
         <p class="subtext">育成側のメニューです。</p>
-
         <div style="height: 14px;"></div>
 
-        <div class="grid" aria-label="メニュー">
-          <a class="tilelink" href="./training.html" aria-label="レッスンへ">
-            <article class="tile">
-              <div class="idol-head">
-                <h2 class="idol-name">レッスン</h2>
-                <span class="badge">育成</span>
+        <div class="cardgrid" aria-label="機能一覧">
+          <a class="tilelink" href="./training.html" aria-label="育成へ">
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">育成</h2>
+                <p class="navcard-desc">レッスンでステータスを伸ばします。</p>
               </div>
-              <p class="subtext">ステータス/ファン/coins を増やします。</p>
-            </article>
-          </a>
-
-          <a class="tilelink" href="./sns.html" aria-label="SNSへ">
-            <article class="tile">
-              <div class="idol-head">
-                <h2 class="idol-name">SNS</h2>
-                <span class="badge">当日3回</span>
-              </div>
-              <p class="subtext">集客(hype)を増やします。</p>
-            </article>
-          </a>
-
-          <a class="tilelink" href="./live.html" aria-label="ライブへ">
-            <article class="tile">
-              <div class="idol-head">
-                <h2 class="idol-name">ライブ</h2>
-                <span class="badge">チケット</span>
-              </div>
-              <p class="subtext">チケットを消費してライブを実行します。</p>
-            </article>
-          </a>
-
-          <a class="tilelink" href="./idol.html" aria-label="アイドル詳細へ">
-            <article class="tile">
-              <div class="idol-head">
-                <h2 class="idol-name">アイドル詳細</h2>
-                <span class="badge">衣装</span>
-              </div>
-              <p class="subtext">衣装の装備/外しができます。</p>
+              <div class="navcard-arrow">→</div>
             </article>
           </a>
 
           <a class="tilelink" href="./gacha.html" aria-label="ガチャへ">
-            <article class="tile">
-              <div class="idol-head">
-                <h2 class="idol-name">ガチャ</h2>
-                <span class="badge">衣装</span>
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">ガチャ</h2>
+                <p class="navcard-desc">衣装を獲得してライブを強化します。</p>
               </div>
-              <p class="subtext">衣装を獲得してライブを強化します。</p>
+              <div class="navcard-arrow">→</div>
+            </article>
+          </a>
+
+          <a class="tilelink" href="./live.html" aria-label="ライブへ">
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">ライブ</h2>
+                <p class="navcard-desc">チケットを消費してライブを実行します。</p>
+              </div>
+              <div class="navcard-arrow">→</div>
+            </article>
+          </a>
+
+          <a class="tilelink" href="./inventory.html" aria-label="所持品へ">
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">所持品</h2>
+                <p class="navcard-desc">獲得したアイテムを確認します。</p>
+              </div>
+              <div class="navcard-arrow">→</div>
+            </article>
+          </a>
+
+          <a class="tilelink" href="./daily.html" aria-label="デイリーへ">
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">デイリー</h2>
+                <p class="navcard-desc">毎日の目標や回数制限を確認します。</p>
+              </div>
+              <div class="navcard-arrow">→</div>
+            </article>
+          </a>
+
+          <a class="tilelink" href="./achievements.html" aria-label="実績へ">
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">実績</h2>
+                <p class="navcard-desc">これまでの達成状況を確認します。</p>
+              </div>
+              <div class="navcard-arrow">→</div>
             </article>
           </a>
         </div>
@@ -85,16 +93,24 @@
 
   <script>
     (function () {
-      var role = localStorage.getItem('idol-pro:role');
-      var name = localStorage.getItem('idol-pro:name') || '';
+      var role = localStorage.getItem('role') || localStorage.getItem('idol-pro:role');
       if (role !== 'producer') {
         window.location.replace('./index.html');
         return;
       }
-      var roleEl = document.getElementById('role');
-      var nameEl = document.getElementById('name');
-      if (roleEl) roleEl.textContent = role;
-      if (nameEl) nameEl.textContent = name ? name : '（未設定）';
+
+      if (localStorage.getItem('coins') === null) localStorage.setItem('coins', '0');
+      if (localStorage.getItem('gems') === null) localStorage.setItem('gems', '0');
+
+      var coins = parseInt(localStorage.getItem('coins') || '0', 10);
+      var gems = parseInt(localStorage.getItem('gems') || '0', 10);
+      if (!Number.isFinite(coins)) coins = 0;
+      if (!Number.isFinite(gems)) gems = 0;
+
+      var coinsEl = document.getElementById('coins');
+      var gemsEl = document.getElementById('gems');
+      if (coinsEl) coinsEl.textContent = String(Math.max(0, coins));
+      if (gemsEl) gemsEl.textContent = String(Math.max(0, gems));
     })();
   </script>
 </body>
