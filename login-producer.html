@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>プロデューサーログイン</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="page">
+    <div class="wrap">
+      <section class="card" aria-label="プロデューサーログイン">
+        <h1 class="h1">プロデューサーとしてログイン</h1>
+        <p class="subtext">表示名だけでログインできます（仮）。</p>
+
+        <div style="height: 14px;"></div>
+
+        <form id="form" class="profile" autocomplete="off">
+          <label class="smalltitle" for="name">表示名</label>
+          <input class="input" id="name" name="name" type="text" inputmode="text" placeholder="例）しみずP" required maxlength="24" />
+
+          <div style="height: 6px;"></div>
+
+          <button class="btn btn-primary" type="submit">ログインして育成へ</button>
+          <a class="btn btn-secondary" href="./index.html">戻る</a>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var form = document.getElementById('form');
+      var nameEl = document.getElementById('name');
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = (nameEl.value || '').trim();
+        if (!name) return;
+        localStorage.setItem('idol-pro:role', 'producer');
+        localStorage.setItem('idol-pro:name', name);
+        window.location.href = './dashboard.html';
+      });
+    })();
+  </script>
+</body>
+</html>

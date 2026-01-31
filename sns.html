@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SNS</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <main class="page">
+    <div class="wrap">
+      <div class="topbar" aria-label="ヘッダー">
+        <div>
+          <div style="font-weight: 900; font-size: 18px; letter-spacing: 0.02em;">SNS</div>
+          <a class="linkrow" href="./dashboard.html">← ダッシュボードへ戻る</a>
+          <span style="display:inline-block; width: 10px;"></span>
+          <a class="linkrow" href="./gacha.html">▶ ガチャへ</a>
+        </div>
+        <div class="topbar-right">
+          <div class="wallet" aria-label="所持通貨">
+            <span>coins</span> <strong id="coins">-</strong>
+            <span>gems</span> <strong id="gems">-</strong>
+            <span>残りライブチケット</span> <strong id="tickets">-</strong>
+            <span>hype</span> <strong id="hype">-</strong>
+          </div>
+          <a class="user" href="#" aria-label="ユーザー">
+            <span class="avatar" aria-hidden="true">U</span>
+            <span>ユーザー</span>
+          </a>
+        </div>
+      </div>
+
+      <section class="card" aria-label="SNS集客">
+        <h1 class="h1">SNS集客</h1>
+        <p class="subtext">当日最大3回まで、集客(hype)を +1 できます（日付が変わると 0 に戻ります）。</p>
+
+        <div style="height: 14px;"></div>
+
+        <div class="two-col">
+          <div class="profile">
+            <p class="smalltitle">現在</p>
+            <div class="profilelist">
+              <div class="row">
+                <div class="k">hype</div>
+                <div class="v" id="hype-now">-</div>
+              </div>
+              <div class="row">
+                <div class="k">本日の回数</div>
+                <div class="v" id="sns-used">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <p class="smalltitle">投稿</p>
+            <button class="btn btn-primary" id="post" type="button">投稿して集客 +1</button>
+            <div class="notice" id="limit" style="display:none;">本日は上限(3回)に達しました</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./game.js"></script>
+  <script>
+    (function () {
+      function qs(id) { return document.getElementById(id); }
+      function fmtNumber(n) {
+        try { return new Intl.NumberFormat('ja-JP').format(n); } catch (e) { return String(n); }
+      }
+      function showToast(message) {
+        var el = qs('toast');
+        el.textContent = message;
+        el.classList.add('show');
+        window.clearTimeout(showToast._t);
+        showToast._t = window.setTimeout(function () { el.classList.remove('show'); }, 1700);
+      }
+
+      var role = localStorage.getItem('idol-pro:role');
+      if (role !== 'producer') {
+        window.location.replace('./index.html');
+        return;
+      }
+
+      function renderHeader() {
+        var w = window.IdolProGame.loadWallet();
+        var d = window.IdolProGame.loadDaily();
+        qs('coins').textContent = fmtNumber(w.coins);
+        qs('gems').textContent = fmtNumber(w.gems);
+        qs('tickets').textContent = String(d.liveTickets);
+        qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
+      }
+
+      function render() {
+        var d = window.IdolProGame.loadDaily();
+        qs('hype-now').textContent = String(d.hype);
+        qs('sns-used').textContent = String(d.snsPowerUsed) + ' / 3';
+        qs('post').disabled = d.snsPowerUsed >= 3;
+        qs('limit').style.display = d.snsPowerUsed >= 3 ? 'block' : 'none';
+        renderHeader();
+      }
+
+      qs('post').addEventListener('click', function () {
+        var r = window.IdolProGame.addHypeFromSns();
+        if (!r.ok) {
+          showToast('本日の上限です');
+          render();
+          return;
+        }
+        showToast('集客 +1');
+        render();
+      });
+
+      window.addEventListener('storage', function (e) {
+        if (!e.key) return;
+        if (e.key === window.IdolProGame.WALLET_KEY || e.key === window.IdolProGame.DAILY_KEY) {
+          render();
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

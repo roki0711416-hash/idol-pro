@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>アイドル詳細</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="page">
+    <div class="wrap">
+      <div class="topbar" aria-label="ヘッダー">
+        <div>
+          <div style="font-weight: 800; font-size: 18px; letter-spacing: 0.02em;">アイドル詳細</div>
+          <a class="linkrow" id="back-home" href="./dashboard.html">← 戻る</a>
+          <span style="display:inline-block; width: 10px;"></span>
+          <a class="linkrow" id="to-gacha" href="./gacha.html">▶ ガチャへ</a>
+        </div>
+        <div class="topbar-right">
+          <div class="wallet" aria-label="所持通貨">
+            <span>coins</span> <strong id="coins">-</strong>
+            <span>gems</span> <strong id="gems">-</strong>
+            <span>残りライブチケット</span> <strong id="tickets">-</strong>
+            <span>hype</span> <strong id="hype">-</strong>
+          </div>
+          <a class="user" href="#" aria-label="ユーザー">
+            <span class="avatar" aria-hidden="true">U</span>
+            <span>ユーザー</span>
+          </a>
+        </div>
+      </div>
+
+      <section class="card" aria-label="アイドル名">
+        <h1 class="h1" id="idol-name">プロデュース中アイドル</h1>
+        <p class="subtext">衣装を装備してライブを有利にしましょう。</p>
+      </section>
+
+      <section class="card" aria-label="詳細">
+        <div class="two-col">
+          <div class="profile" aria-label="プロフィール">
+            <p class="smalltitle">プロフィール</p>
+
+            <div class="profilelist">
+              <div class="row">
+                <div class="k">ファン数</div>
+                <div class="v" id="profile-fans">-</div>
+              </div>
+            </div>
+
+            <p class="smalltitle" style="margin-top: 6px;">ステータス</p>
+            <div class="stats" aria-label="ステータスバー">
+              <div class="stat">
+                <div class="stathead">
+                  <div class="statname">vocal</div>
+                  <div class="statval" id="vocal-text">-</div>
+                </div>
+                <div class="bar"><div class="fill" id="vocal-fill" style="width: 0%;"></div></div>
+              </div>
+              <div class="stat">
+                <div class="stathead">
+                  <div class="statname">dance</div>
+                  <div class="statval" id="dance-text">-</div>
+                </div>
+                <div class="bar"><div class="fill" id="dance-fill" style="width: 0%;"></div></div>
+              </div>
+              <div class="stat">
+                <div class="stathead">
+                  <div class="statname">expression</div>
+                  <div class="statval" id="expression-text">-</div>
+                </div>
+                <div class="bar"><div class="fill" id="expression-fill" style="width: 0%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions" aria-label="アクション">
+            <p class="smalltitle">アクション</p>
+            <a class="btn btn-primary" id="to-training" href="./training.html">レッスンへ</a>
+            <a class="btn btn-secondary" id="to-sns" href="./sns.html">SNSへ</a>
+            <a class="btn btn-secondary" id="to-live" href="./live.html">ライブへ</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="衣装装備">
+        <p class="smalltitle">衣装装備</p>
+        <p class="subtext">装備するとライブ成功率/ファン獲得にボーナスが付きます。</p>
+        <div style="height: 12px;"></div>
+        <div class="two-col">
+          <div class="profile">
+            <div class="row">
+              <div class="k">装備中</div>
+              <div class="v" id="equipped-name">なし</div>
+            </div>
+            <div class="row">
+              <div class="k">ボーナス</div>
+              <div class="v" id="equipped-bonus">-</div>
+            </div>
+          </div>
+          <div class="actions">
+            <select class="select" id="costume-select" aria-label="所持衣装">
+              <option value="">（選択してください）</option>
+            </select>
+            <button class="btn btn-primary" id="equip" type="button">装備する</button>
+            <button class="btn btn-secondary" id="unequip" type="button">外す</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./game.js"></script>
+  <script>
+    (function () {
+      function qs(id) { return document.getElementById(id); }
+      function fmtNumber(n) {
+        try { return new Intl.NumberFormat('ja-JP').format(n); } catch (e) { return String(n); }
+      }
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+      function statToPercent(value) {
+        return clamp(value, 0, 100);
+      }
+
+      var role = localStorage.getItem('idol-pro:role');
+      var back = qs('back-home');
+      var gachaLink = qs('to-gacha');
+      if (role === 'fan') {
+        if (back) back.href = './fan.html';
+        if (back) back.textContent = '← ファンページへ戻る';
+        if (gachaLink) gachaLink.style.display = 'none';
+      } else {
+        if (back) back.href = './dashboard.html';
+        if (back) back.textContent = '← ダッシュボードへ戻る';
+      }
+
+      function renderHeader() {
+        var w = window.IdolProGame.loadWallet();
+        var d = window.IdolProGame.loadDaily();
+        qs('coins').textContent = fmtNumber(w.coins);
+        qs('gems').textContent = fmtNumber(w.gems);
+        qs('tickets').textContent = String(d.liveTickets);
+        qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
+      }
+
+      function bonusText(bonus) {
+        var parts = [];
+        if (bonus.fansPct) parts.push('fans +' + Math.round(bonus.fansPct * 100) + '%');
+        if (bonus.liveSuccessPct) parts.push('live +' + Math.round(bonus.liveSuccessPct * 100) + '%');
+        return parts.length ? parts.join(' / ') : 'bonus なし';
+      }
+
+      function renderCostumes() {
+        var owned = window.IdolProGame.getOwnedCostumes();
+        var select = qs('costume-select');
+        select.innerHTML = '<option value="">（選択してください）</option>';
+        for (var i = 0; i < owned.length; i++) {
+          var o = owned[i];
+          var opt = document.createElement('option');
+          opt.value = o.costume.id;
+          opt.textContent = '[' + o.costume.rarity + '] ' + o.costume.name + ' x' + String(o.qty);
+          select.appendChild(opt);
+        }
+
+        var eq = window.IdolProGame.getEquippedBonus();
+        qs('equipped-name').textContent = eq.costume ? ('[' + eq.costume.rarity + '] ' + eq.costume.name) : 'なし';
+        qs('equipped-bonus').textContent = bonusText(eq.bonus);
+      }
+
+      function renderStats() {
+        var s = window.IdolProGame.loadStats();
+
+        qs('profile-fans').textContent = fmtNumber(s.fans);
+
+        qs('vocal-text').textContent = String(s.vocal);
+        qs('dance-text').textContent = String(s.dance);
+        qs('expression-text').textContent = String(s.expression);
+
+        qs('vocal-fill').style.width = statToPercent(s.vocal) + '%';
+        qs('dance-fill').style.width = statToPercent(s.dance) + '%';
+        qs('expression-fill').style.width = statToPercent(s.expression) + '%';
+      }
+
+      function renderAll() {
+        renderHeader();
+        renderStats();
+        renderCostumes();
+      }
+
+      qs('equip').addEventListener('click', function () {
+        var value = qs('costume-select').value;
+        if (!value) return;
+        var r = window.IdolProGame.setEquippedCostume(value);
+        if (!r.ok) return;
+        renderAll();
+      });
+
+      qs('unequip').addEventListener('click', function () {
+        window.IdolProGame.setEquippedCostume(null);
+        renderAll();
+      });
+
+      window.addEventListener('storage', function (e) {
+        if (!e.key) return;
+        if (e.key === window.IdolProGame.WALLET_KEY ||
+            e.key === window.IdolProGame.DAILY_KEY ||
+            e.key === window.IdolProGame.STATS_KEY ||
+            e.key === window.IdolProGame.EQUIPPED_KEY ||
+            e.key === window.IdolProGame.INVENTORY_KEY) {
+          renderAll();
+        }
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

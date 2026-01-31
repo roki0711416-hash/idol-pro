@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ファンページ</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="page">
+    <div class="wrap">
+      <div class="topbar" aria-label="ヘッダー">
+        <div>
+          <div class="brand">アイドル育成プラットフォーム</div>
+          <a class="linkrow" href="./index.html">← ロール選択へ</a>
+        </div>
+        <div class="topbar-right">
+          <div class="wallet" aria-label="ログイン情報">
+            <span>role</span> <strong id="role">-</strong>
+            <span>name</span> <strong id="name">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <section class="card" aria-label="ファンメニュー">
+        <h1 class="h1">ファンページ</h1>
+        <p class="subtext">応援側のメニューです。</p>
+
+        <div style="height: 14px;"></div>
+
+        <div class="grid-2" aria-label="ファン導線">
+          <a class="tilelink" href="./idol.html" aria-label="推しを見る">
+            <article class="tile">
+              <div class="idol-head">
+                <h2 class="idol-name">推しを見る</h2>
+                <span class="badge">閲覧</span>
+              </div>
+              <p class="subtext">推しのステータスやファン数を確認します。</p>
+            </article>
+          </a>
+
+          <a class="tilelink" href="./live.html" aria-label="応援する">
+            <article class="tile">
+              <div class="idol-head">
+                <h2 class="idol-name">応援する</h2>
+                <span class="badge">ライブ</span>
+              </div>
+              <p class="subtext">ライブページへ移動します。</p>
+            </article>
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var role = localStorage.getItem('idol-pro:role');
+      var name = localStorage.getItem('idol-pro:name') || '';
+      if (role !== 'fan') {
+        window.location.replace('./index.html');
+        return;
+      }
+      var roleEl = document.getElementById('role');
+      var nameEl = document.getElementById('name');
+      if (roleEl) roleEl.textContent = role;
+      if (nameEl) nameEl.textContent = name ? name : '（未設定）';
+    })();
+  </script>
+</body>
+</html>
