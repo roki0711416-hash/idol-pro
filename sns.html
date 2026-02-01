@@ -16,7 +16,7 @@
           <div style="font-weight: 900; font-size: 18px; letter-spacing: 0.02em;">SNS</div>
           <a class="linkrow" href="./dashboard.html">← ダッシュボードへ戻る</a>
           <span style="display:inline-block; width: 10px;"></span>
-          <a class="linkrow" href="./gacha.html">▶ ガチャへ</a>
+          <a class="linkrow" href="./gacha.html">▶ プラン/衣装へ</a>
         </div>
         <div class="topbar-right">
           <div class="wallet" aria-label="所持通貨">
@@ -24,6 +24,7 @@
             <span>gems</span> <strong id="gems">-</strong>
             <span>残りライブチケット</span> <strong id="tickets">-</strong>
             <span>hype</span> <strong id="hype">-</strong>
+            <span>plan</span> <strong id="plan">-</strong>
           </div>
           <a class="user" href="#" aria-label="ユーザー">
             <span class="avatar" aria-hidden="true">U</span>
@@ -91,6 +92,9 @@
         qs('gems').textContent = fmtNumber(w.gems);
         qs('tickets').textContent = String(d.liveTickets);
         qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
+
+        var plan = window.IdolProGame.getSubscriptionPlan();
+        qs('plan').textContent = (plan === 'premium') ? 'PREMIUM' : (plan === 'basic') ? 'BASIC' : 'FREE';
       }
 
       function render() {
@@ -115,7 +119,7 @@
 
       window.addEventListener('storage', function (e) {
         if (!e.key) return;
-        if (e.key === window.IdolProGame.WALLET_KEY || e.key === window.IdolProGame.DAILY_KEY) {
+        if (e.key === window.IdolProGame.WALLET_KEY || e.key === window.IdolProGame.DAILY_KEY || e.key === window.IdolProGame.SUBSCRIPTION_KEY) {
           render();
         }
       });

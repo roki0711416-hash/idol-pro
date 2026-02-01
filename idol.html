@@ -14,7 +14,7 @@
           <div style="font-weight: 800; font-size: 18px; letter-spacing: 0.02em;">アイドル詳細</div>
           <a class="linkrow" id="back-home" href="./dashboard.html">← 戻る</a>
           <span style="display:inline-block; width: 10px;"></span>
-          <a class="linkrow" id="to-gacha" href="./gacha.html">▶ ガチャへ</a>
+          <a class="linkrow" id="to-gacha" href="./gacha.html">▶ プラン/衣装へ</a>
         </div>
         <div class="topbar-right">
           <div class="wallet" aria-label="所持通貨">
@@ -22,6 +22,7 @@
             <span>gems</span> <strong id="gems">-</strong>
             <span>残りライブチケット</span> <strong id="tickets">-</strong>
             <span>hype</span> <strong id="hype">-</strong>
+            <span>plan</span> <strong id="plan">-</strong>
           </div>
           <a class="user" href="#" aria-label="ユーザー">
             <span class="avatar" aria-hidden="true">U</span>
@@ -84,7 +85,7 @@
 
       <section class="card" aria-label="衣装装備">
         <p class="smalltitle">衣装装備</p>
-        <p class="subtext">装備するとライブ成功率/ファン獲得にボーナスが付きます。</p>
+        <p class="subtext">装備するとライブ成功率/ファン獲得にボーナスが付きます。有料衣装はプランで解放されます。</p>
         <div style="height: 12px;"></div>
         <div class="two-col">
           <div class="profile">
@@ -108,6 +109,21 @@
       </section>
     </div>
   </main>
+
+  <div class="modal-backdrop" id="plan-modal" hidden aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title">
+      <div class="modal-head">
+        <div class="modal-title" id="plan-modal-title">プランのご案内</div>
+      </div>
+      <div class="modal-body">
+        <p class="subtext" id="plan-modal-text">この衣装はプランで解放されます。</p>
+      </div>
+      <div class="modal-actions">
+        <a class="btn btn-primary" href="./gacha.html">プランを見る</a>
+        <button class="btn btn-secondary" id="plan-modal-close" type="button">閉じる</button>
+      </div>
+    </div>
+  </div>
 
   <script src="./game.js"></script>
   <script>
@@ -142,6 +158,9 @@
         qs('gems').textContent = fmtNumber(w.gems);
         qs('tickets').textContent = String(d.liveTickets);
         qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
+
+        var plan = window.IdolProGame.getSubscriptionPlan();
+        qs('plan').textContent = (plan === 'premium') ? 'PREMIUM' : (plan === 'basic') ? 'BASIC' : 'FREE';
       }
 
       function bonusText(bonus) {
@@ -151,15 +170,37 @@
         return parts.length ? parts.join(' / ') : 'bonus なし';
       }
 
+      function requiredPlanLabel(p) {
+        if (p === 'premium') return 'プレミアム';
+        if (p === 'basic') return 'ベーシック';
+        return '無料';
+      }
+
+      function openPlanModal(requiredPlan) {
+        var modal = qs('plan-modal');
+        var text = qs('plan-modal-text');
+        var current = window.IdolProGame.getSubscriptionPlan();
+        text.textContent = 'この衣装は「' + requiredPlanLabel(requiredPlan) + '」で利用できます。現在のプラン: ' + requiredPlanLabel(current) + '。';
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closePlanModal() {
+        var modal = qs('plan-modal');
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
       function renderCostumes() {
-        var owned = window.IdolProGame.getOwnedCostumes();
+        var catalog = window.IdolProGame.getCostumeCatalog();
         var select = qs('costume-select');
         select.innerHTML = '<option value="">（選択してください）</option>';
-        for (var i = 0; i < owned.length; i++) {
-          var o = owned[i];
+        for (var i = 0; i < catalog.length; i++) {
+          var row = catalog[i];
+          var c = row.costume;
           var opt = document.createElement('option');
-          opt.value = o.costume.id;
-          opt.textContent = '[' + o.costume.rarity + '] ' + o.costume.name + ' x' + String(o.qty);
+          opt.value = c.id;
+          opt.textContent = '[' + c.rarity + '] ' + c.name + (row.available ? '' : '（要' + requiredPlanLabel(row.requiredPlan) + '）');
           select.appendChild(opt);
         }
 
@@ -192,7 +233,12 @@
         var value = qs('costume-select').value;
         if (!value) return;
         var r = window.IdolProGame.setEquippedCostume(value);
-        if (!r.ok) return;
+        if (!r.ok) {
+          if (r.reason === 'requires-plan') {
+            openPlanModal(r.requiredPlan);
+          }
+          return;
+        }
         renderAll();
       });
 
@@ -201,12 +247,21 @@
         renderAll();
       });
 
+      qs('plan-modal-close').addEventListener('click', function () {
+        closePlanModal();
+      });
+
+      qs('plan-modal').addEventListener('click', function (e) {
+        if (e.target === qs('plan-modal')) closePlanModal();
+      });
+
       window.addEventListener('storage', function (e) {
         if (!e.key) return;
         if (e.key === window.IdolProGame.WALLET_KEY ||
             e.key === window.IdolProGame.DAILY_KEY ||
             e.key === window.IdolProGame.STATS_KEY ||
             e.key === window.IdolProGame.EQUIPPED_KEY ||
+            e.key === window.IdolProGame.SUBSCRIPTION_KEY ||
             e.key === window.IdolProGame.INVENTORY_KEY) {
           renderAll();
         }

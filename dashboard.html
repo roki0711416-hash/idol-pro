@@ -18,12 +18,16 @@
           <div class="wallet" aria-label="所持表示">
             <span>コイン</span> <strong id="coins">0</strong>
             <span>ジェム</span> <strong id="gems">0</strong>
+            <span>プラン</span> <strong id="plan">-</strong>
           </div>
         </div>
       </header>
 
       <section class="card" aria-label="メニュー">
         <p class="subtext">育成側のメニューです。</p>
+        <div id="world-notice" class="notice" hidden style="margin-top: 12px;">
+          Unity WebGL のビルドがまだ配置されていない可能性があります（/world/）。
+        </div>
         <div style="height: 14px;"></div>
 
         <div class="cardgrid" aria-label="機能一覧">
@@ -37,11 +41,11 @@
             </article>
           </a>
 
-          <a class="tilelink" href="./gacha.html" aria-label="ガチャへ">
+          <a class="tilelink" href="./gacha.html" aria-label="プラン/衣装へ">
             <article class="navcard">
               <div>
-                <h2 class="navcard-title">ガチャ</h2>
-                <p class="navcard-desc">衣装を獲得してライブを強化します。</p>
+                <h2 class="navcard-title">プラン/衣装</h2>
+                <p class="navcard-desc">無料/サブスクで衣装を解放します。</p>
               </div>
               <div class="navcard-arrow">→</div>
             </article>
@@ -86,6 +90,16 @@
               <div class="navcard-arrow">→</div>
             </article>
           </a>
+
+          <a class="tilelink" href="/world/" aria-label="3D空間（Unity）へ">
+            <article class="navcard">
+              <div>
+                <h2 class="navcard-title">3D空間（Unity）</h2>
+                <p class="navcard-desc">Unity WebGL の3D空間を開きます。</p>
+              </div>
+              <div class="navcard-arrow">→</div>
+            </article>
+          </a>
         </div>
       </section>
     </div>
@@ -109,8 +123,25 @@
 
       var coinsEl = document.getElementById('coins');
       var gemsEl = document.getElementById('gems');
+      var planEl = document.getElementById('plan');
       if (coinsEl) coinsEl.textContent = String(Math.max(0, coins));
       if (gemsEl) gemsEl.textContent = String(Math.max(0, gems));
+
+      var p = (localStorage.getItem('idol-pro:subscription') || 'free').toLowerCase();
+      if (p !== 'basic' && p !== 'premium') p = 'free';
+      if (planEl) planEl.textContent = (p === 'premium') ? 'PREMIUM' : (p === 'basic') ? 'BASIC' : 'FREE';
+
+      var notice = document.getElementById('world-notice');
+      if (notice) {
+        function show() { notice.hidden = false; }
+        fetch('/world/', { method: 'HEAD' })
+          .then(function (r) { if (!r.ok) show(); })
+          .catch(function () {
+            fetch('/world/')
+              .then(function (r) { if (!r.ok) show(); })
+              .catch(show);
+          });
+      }
     })();
   </script>
 </body>

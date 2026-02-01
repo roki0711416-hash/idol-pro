@@ -22,7 +22,7 @@
                 <h2 class="idol-name">プロデューサー</h2>
                 <span class="badge">育成側</span>
               </div>
-              <p class="subtext">育成・衣装・ガチャ・ライブ運用</p>
+              <p class="subtext">育成・衣装（プラン）・ライブ運用</p>
               <div style="height: 8px;"></div>
               <span class="btn btn-primary" style="width:auto;">プロデューサーとして育成する</span>
             </article>
@@ -44,7 +44,47 @@
         <div style="height: 8px;"></div>
         <p class="subtext">※ パスワード無しの仮ログインです。</p>
       </section>
+
+      <section class="card" aria-label="3D空間">
+        <h2 class="smalltitle">3D空間</h2>
+        <p class="subtext">Unity WebGL の3D空間を開きます。</p>
+
+        <div style="height: 12px;"></div>
+
+        <a class="tilelink" href="/world/" aria-label="3D空間（Unity）へ">
+          <article class="tile">
+            <div class="idol-head">
+              <h3 class="idol-name" style="margin:0; font-size: 14px; font-weight: 900;">3D空間（Unity）</h3>
+              <span class="badge">WebGL</span>
+            </div>
+            <p class="subtext">/world/ に配置されたビルドを表示します。</p>
+            <div style="height: 8px;"></div>
+            <span class="btn btn-secondary" style="width:auto;">開く</span>
+          </article>
+        </a>
+
+        <div id="world-notice" class="notice" hidden style="margin-top: 12px;">
+          Unity WebGL のビルドがまだ配置されていない可能性があります（/world/）。
+        </div>
+      </section>
     </div>
   </main>
+
+  <script>
+    (function () {
+      var notice = document.getElementById('world-notice');
+      if (!notice) return;
+
+      function show() { notice.hidden = false; }
+
+      fetch('/world/', { method: 'HEAD' })
+        .then(function (r) { if (!r.ok) show(); })
+        .catch(function () {
+          fetch('/world/')
+            .then(function (r) { if (!r.ok) show(); })
+            .catch(show);
+        });
+    })();
+  </script>
 </body>
 </html>

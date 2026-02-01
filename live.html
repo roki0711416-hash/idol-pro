@@ -18,7 +18,7 @@
           <span style="display:inline-block; width: 10px;"></span>
           <a class="linkrow" id="to-sns" href="./sns.html">▶ SNSへ</a>
           <span style="display:inline-block; width: 10px;"></span>
-          <a class="linkrow" id="to-gacha" href="./gacha.html">▶ ガチャへ</a>
+          <a class="linkrow" id="to-gacha" href="./gacha.html">▶ プラン/衣装へ</a>
         </div>
         <div class="topbar-right">
           <div class="wallet" aria-label="所持通貨">
@@ -26,6 +26,7 @@
             <span>gems</span> <strong id="gems">-</strong>
             <span>残りライブチケット</span> <strong id="tickets">-</strong>
             <span>hype</span> <strong id="hype">-</strong>
+            <span>plan</span> <strong id="plan">-</strong>
           </div>
           <a class="user" href="#" aria-label="ユーザー">
             <span class="avatar" aria-hidden="true">U</span>
@@ -137,6 +138,9 @@
         qs('gems').textContent = fmtNumber(w.gems);
         qs('tickets').textContent = String(d.liveTickets);
         qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
+
+        var plan = window.IdolProGame.getSubscriptionPlan();
+        qs('plan').textContent = (plan === 'premium') ? 'PREMIUM' : (plan === 'basic') ? 'BASIC' : 'FREE';
       }
 
       function renderScore() {
@@ -198,6 +202,7 @@
             e.key === window.IdolProGame.DAILY_KEY ||
             e.key === window.IdolProGame.STATS_KEY ||
             e.key === window.IdolProGame.EQUIPPED_KEY ||
+            e.key === window.IdolProGame.SUBSCRIPTION_KEY ||
             e.key === window.IdolProGame.INVENTORY_KEY) {
           renderAll();
         }

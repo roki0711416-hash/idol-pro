@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ガチャ</title>
+  <title>プラン / 衣装</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
     <div class="wrap">
       <div class="topbar" aria-label="ヘッダー">
         <div>
-          <div style="font-weight: 900; font-size: 18px; letter-spacing: 0.02em;">ガチャ</div>
+          <div style="font-weight: 900; font-size: 18px; letter-spacing: 0.02em;">プラン / 衣装</div>
           <a class="linkrow" href="./dashboard.html">← ダッシュボードへ戻る</a>
         </div>
         <div class="topbar-right">
@@ -22,6 +22,7 @@
             <span>gems</span> <strong id="gems">-</strong>
             <span>残りライブチケット</span> <strong id="tickets">-</strong>
             <span>hype</span> <strong id="hype">-</strong>
+            <span>plan</span> <strong id="plan">-</strong>
           </div>
           <a class="user" href="#" aria-label="ユーザー">
             <span class="avatar" aria-hidden="true">U</span>
@@ -30,48 +31,51 @@
         </div>
       </div>
 
-      <section class="card" aria-label="ガチャメニュー">
-        <h1 class="h1">衣装ガチャ</h1>
-        <p class="subtext">コイン/ジェムで衣装を獲得します（天井：50でSSR確定）。</p>
+      <section class="card" aria-label="プラン">
+        <h1 class="h1">プラン</h1>
+        <p class="subtext">衣装の利用可否は「無料」または「サブスクリプション」で決まります。ランダム排出や確率表示はありません。</p>
 
         <div style="height: 14px;"></div>
 
-        <div class="grid" aria-label="ガチャ種類">
+        <div class="grid" aria-label="プラン選択">
           <div class="tile">
             <div class="idol-head">
-              <h2 class="idol-name">コインガチャ</h2>
-              <span class="badge" id="pity-coin">pity -</span>
+              <h2 class="idol-name">無料プラン</h2>
+              <span class="badge" id="badge-free" style="display:none;">現在</span>
             </div>
-            <p>1回 200 coins / 10連 1800 coins</p>
+            <p>初期衣装（制限付き） のみ使用可能</p>
             <div style="height: 10px;"></div>
-            <button class="btn btn-primary" id="coin-1" type="button">コインで1回</button>
-            <button class="btn btn-secondary" id="coin-10" type="button">コインで10連</button>
+            <button class="btn btn-secondary" id="set-free" type="button">無料で続ける</button>
+            <p class="subtext">※ 購入強制はしません</p>
           </div>
 
           <div class="tile">
             <div class="idol-head">
-              <h2 class="idol-name">ジェムガチャ</h2>
-              <span class="badge" id="pity-gem">pity -</span>
+              <h2 class="idol-name">ベーシック（月額）</h2>
+              <span class="badge" id="badge-basic" style="display:none;">現在</span>
             </div>
-            <p>1回 100 gems / 10連 900 gems</p>
+            <p>衣装バリエーション：少 / 基本機能のみ</p>
             <div style="height: 10px;"></div>
-            <button class="btn btn-primary" id="gem-1" type="button">ジェムで1回</button>
-            <button class="btn btn-secondary" id="gem-10" type="button">ジェムで10連</button>
-            <p class="subtext">※ gemsが不足している場合は引けません（ダミー通貨）。</p>
+            <button class="btn btn-primary" id="set-basic" type="button">ベーシックにする</button>
+            <p class="subtext">※ 決済はデモ（状態フラグのみ）</p>
           </div>
 
           <div class="tile">
-            <h2 class="idol-name">排出率</h2>
-            <p>COMMON 60% / RARE 30% / SR 9% / SSR 1%</p>
+            <div class="idol-head">
+              <h2 class="idol-name">プレミアム（月額）</h2>
+              <span class="badge" id="badge-premium" style="display:none;">現在</span>
+            </div>
+            <p>衣装バリエーション：多 / 特典機能を解放</p>
             <div style="height: 10px;"></div>
-            <p class="subtext">ボーナス例: ファン+5% / ライブ成功+2%</p>
+            <button class="btn btn-primary" id="set-premium" type="button">プレミアムにする</button>
+            <p class="subtext">※ 購入強制はしません</p>
           </div>
         </div>
       </section>
 
-      <section class="card" aria-label="結果">
-        <p class="smalltitle">結果</p>
-        <div class="idol-grid" id="results" aria-label="ガチャ結果"></div>
+      <section class="card" aria-label="衣装一覧">
+        <p class="smalltitle">衣装一覧</p>
+        <div class="idol-grid" id="costume-list" aria-label="衣装一覧"></div>
       </section>
     </div>
   </main>
@@ -93,15 +97,21 @@
         }, 1700);
       }
 
+      function planLabel(plan) {
+        if (plan === 'premium') return 'PREMIUM';
+        if (plan === 'basic') return 'BASIC';
+        return 'FREE';
+      }
+
       var role = localStorage.getItem('idol-pro:role');
       if (role !== 'producer') {
         window.location.replace('./index.html');
         return;
       }
 
-      var resultsEl = qs('results');
+      var listEl = qs('costume-list');
 
-      function renderWalletAndPity() {
+      function renderHeader() {
         var w = window.IdolProGame.loadWallet();
         qs('coins').textContent = fmtNumber(w.coins);
         qs('gems').textContent = fmtNumber(w.gems);
@@ -110,9 +120,15 @@
         qs('tickets').textContent = String(d.liveTickets);
         qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
 
-        var game = window.IdolProGame.loadGameState();
-        qs('pity-coin').textContent = 'pity ' + String(game.pity.coin) + ' / 50';
-        qs('pity-gem').textContent = 'pity ' + String(game.pity.gem) + ' / 50';
+        var plan = window.IdolProGame.getSubscriptionPlan();
+        qs('plan').textContent = planLabel(plan);
+      }
+
+      function renderPlanBadges() {
+        var plan = window.IdolProGame.getSubscriptionPlan();
+        qs('badge-free').style.display = plan === 'free' ? 'inline-flex' : 'none';
+        qs('badge-basic').style.display = plan === 'basic' ? 'inline-flex' : 'none';
+        qs('badge-premium').style.display = plan === 'premium' ? 'inline-flex' : 'none';
       }
 
       function costumeBonusText(c) {
@@ -120,13 +136,22 @@
         var parts = [];
         if (b.fansPct) parts.push('fans +' + Math.round(b.fansPct * 100) + '%');
         if (b.liveSuccessPct) parts.push('live +' + Math.round(b.liveSuccessPct * 100) + '%');
+        if (Number.isFinite(b.score) && b.score) parts.push('score +' + String(b.score));
         return parts.length ? parts.join(' / ') : 'bonus なし';
       }
 
-      function renderResults(costumes) {
-        resultsEl.innerHTML = '';
-        for (var i = 0; i < costumes.length; i++) {
-          var c = costumes[i];
+      function requiredPlanLabel(p) {
+        if (p === 'premium') return 'プレミアム';
+        if (p === 'basic') return 'ベーシック';
+        return '無料';
+      }
+
+      function renderCostumeList() {
+        var catalog = window.IdolProGame.getCostumeCatalog();
+        listEl.innerHTML = '';
+        for (var i = 0; i < catalog.length; i++) {
+          var row = catalog[i];
+          var c = row.costume;
           var a = document.createElement('div');
           a.className = 'tile';
           a.innerHTML =
@@ -134,42 +159,36 @@
               '<h2 class="idol-name">' + c.name + '</h2>' +
               '<span class="badge">' + c.rarity + '</span>' +
             '</div>' +
-            '<p>ID: ' + c.id + '</p>' +
+            '<p>必要プラン: ' + requiredPlanLabel(row.requiredPlan) + (row.available ? '' : '（未契約）') + '</p>' +
             '<p class="subtext">' + costumeBonusText(c) + '</p>';
-          resultsEl.appendChild(a);
+          listEl.appendChild(a);
         }
       }
 
-      function doGacha(currency, count) {
-        var result = window.IdolProGame.rollGacha(currency, count);
-        if (!result.ok) {
-          if (result.reason === 'not-enough') {
-            showToast('通貨が足りません');
-          } else {
-            showToast('引けません');
-          }
-          renderWalletAndPity();
-          return;
-        }
-
-        renderWalletAndPity();
-        renderResults(result.results);
-        showToast('獲得: ' + result.results.length + '件');
+      function setPlan(plan) {
+        window.IdolProGame.setSubscriptionPlan(plan);
+        renderHeader();
+        renderPlanBadges();
+        renderCostumeList();
+        showToast('プランを更新しました');
       }
 
-      qs('coin-1').addEventListener('click', function () { doGacha('coin', 1); });
-      qs('coin-10').addEventListener('click', function () { doGacha('coin', 10); });
-      qs('gem-1').addEventListener('click', function () { doGacha('gem', 1); });
-      qs('gem-10').addEventListener('click', function () { doGacha('gem', 10); });
+      qs('set-free').addEventListener('click', function () { setPlan('free'); });
+      qs('set-basic').addEventListener('click', function () { setPlan('basic'); });
+      qs('set-premium').addEventListener('click', function () { setPlan('premium'); });
 
       window.addEventListener('storage', function (e) {
         if (!e.key) return;
-        if (e.key === window.IdolProGame.WALLET_KEY || e.key === window.IdolProGame.GAME_KEY || e.key === window.IdolProGame.DAILY_KEY) {
-          renderWalletAndPity();
+        if (e.key === window.IdolProGame.WALLET_KEY || e.key === window.IdolProGame.DAILY_KEY || e.key === window.IdolProGame.SUBSCRIPTION_KEY) {
+          renderHeader();
+          renderPlanBadges();
+          renderCostumeList();
         }
       });
 
-      renderWalletAndPity();
+      renderHeader();
+      renderPlanBadges();
+      renderCostumeList();
     })();
   </script>
 </body>

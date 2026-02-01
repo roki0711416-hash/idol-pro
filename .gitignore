@@ -1,0 +1,8 @@
+node_modules/
+.next/
+
+# local env
+.env.local
+
+# macOS
+.DS_Store

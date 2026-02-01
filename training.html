@@ -3,85 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>レッスン</title>
+  <title>育成</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
   <main class="page">
-    <div class="wrap">
+    <div class="wrap container-narrow">
       <div class="topbar" aria-label="ヘッダー">
         <div>
-          <div style="font-weight: 900; font-size: 18px; letter-spacing: 0.02em;">レッスン</div>
-          <a class="linkrow" id="back-link" href="./dashboard.html">← ダッシュボードへ戻る</a>
-          <span style="display:inline-block; width: 10px;"></span>
-          <a class="linkrow" href="./gacha.html">▶ ガチャへ</a>
+          <div class="brand">育成</div>
+          <a class="linkrow" id="back-link" href="./dashboard.html">← 戻る</a>
         </div>
         <div class="topbar-right">
-          <div class="wallet" aria-label="所持通貨">
-            <span>coins</span> <strong id="coins">-</strong>
-            <span>gems</span> <strong id="gems">-</strong>
-            <span>残りライブチケット</span> <strong id="tickets">-</strong>
-            <span>hype</span> <strong id="hype">-</strong>
+          <div class="wallet" aria-label="所持">
+            <span>コイン</span> <strong id="coins">-</strong>
+            <span>ファン</span> <strong id="fans">-</strong>
+            <span>ジェム</span> <strong id="gems">-</strong>
           </div>
-          <a class="user" href="#" aria-label="ユーザー">
-            <span class="avatar" aria-hidden="true">U</span>
-            <span>ユーザー</span>
-          </a>
         </div>
       </div>
 
-      <section class="card" aria-label="対象アイドル">
-        <h1 class="h1" id="idol-name">レッスン</h1>
-        <p class="subtext">無制限で実行できます（スタミナ制はありません）。</p>
+      <section class="card" aria-label="現在アイドル">
+        <h1 class="h1" id="idol-name">-</h1>
+        <p class="subtext">
+          <span>Lv </span><strong id="idol-level">-</strong>
+          <span style="display:inline-block; width: 10px;"></span>
+          <span>経験値 </span><strong id="idol-exp">-</strong><span>/100</span>
+        </p>
+        <div class="training-stats" aria-label="ステータス">
+          <div class="training-stat"><span class="k">歌</span><strong class="v" id="vocal">-</strong></div>
+          <div class="training-stat"><span class="k">ダンス</span><strong class="v" id="dance">-</strong></div>
+          <div class="training-stat"><span class="k">表現</span><strong class="v" id="expression">-</strong></div>
+        </div>
       </section>
 
-      <section class="card" aria-label="ステータス">
-        <div class="two-col">
-          <div class="profile">
-            <p class="smalltitle">現在の状態</p>
-
-            <div class="profilelist">
-              <div class="row">
-                <div class="k">ファン数</div>
-                <div class="v" id="fans">-</div>
-              </div>
-            </div>
-
-            <p class="smalltitle" style="margin-top: 6px;">ステータス</p>
-            <div class="stats" aria-label="ステータスバー">
-              <div class="stat">
-                <div class="stathead">
-                  <div class="statname">vocal</div>
-                  <div class="statval" id="vocal-text">-</div>
-                </div>
-                <div class="bar"><div class="fill" id="vocal-fill" style="width: 0%;"></div></div>
-              </div>
-              <div class="stat">
-                <div class="stathead">
-                  <div class="statname">dance</div>
-                  <div class="statval" id="dance-text">-</div>
-                </div>
-                <div class="bar"><div class="fill" id="dance-fill" style="width: 0%;"></div></div>
-              </div>
-              <div class="stat">
-                <div class="stathead">
-                  <div class="statname">expression</div>
-                  <div class="statval" id="expression-text">-</div>
-                </div>
-                <div class="bar"><div class="fill" id="expression-fill" style="width: 0%;"></div></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="actions" aria-label="レッスン">
-            <p class="smalltitle">レッスン</p>
-            <button class="btn btn-primary" id="lesson-vocal" type="button">(A) ボーカルレッスン</button>
-            <button class="btn btn-primary" id="lesson-dance" type="button">(B) ダンスレッスン</button>
-            <button class="btn btn-primary" id="lesson-expression" type="button">(C) 表現力レッスン</button>
-          </div>
+      <section class="card" aria-label="育成メニュー">
+        <p class="smalltitle">基本</p>
+        <div class="btn-grid" role="group" aria-label="基本メニュー">
+          <button class="btn btn-secondary" data-menu="basic_vocal" type="button">歌</button>
+          <button class="btn btn-secondary" data-menu="basic_dance" type="button">ダンス</button>
+          <button class="btn btn-secondary" data-menu="basic_expression" type="button">表現</button>
         </div>
+
+        <p class="smalltitle" style="margin-top: 12px;">強化</p>
+        <div class="btn-grid" role="group" aria-label="強化メニュー">
+          <button class="btn btn-primary" data-menu="hard_vocal" type="button">歌</button>
+          <button class="btn btn-primary" data-menu="hard_dance" type="button">ダンス</button>
+          <button class="btn btn-primary" data-menu="hard_expression" type="button">表現</button>
+        </div>
+      </section>
+
+      <section class="card" aria-label="結果ログ">
+        <p class="smalltitle">結果ログ（最新10件）</p>
+        <ol class="loglist" id="log"></ol>
       </section>
     </div>
   </main>
@@ -93,87 +67,62 @@
       function fmtNumber(n) {
         try { return new Intl.NumberFormat('ja-JP').format(n); } catch (e) { return String(n); }
       }
-      function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
-      }
-      function statToPercent(value) {
-        return clamp(value, 0, 100);
-      }
 
       var role = localStorage.getItem('idol-pro:role');
-      if (role !== 'producer') {
+      if (role && role !== 'producer') {
         window.location.replace('./index.html');
         return;
       }
 
-      var backLink = qs('back-link');
-      backLink.href = './dashboard.html';
+      var logs = [];
 
-      function renderHeader() {
-        var w = window.IdolProGame.loadWallet();
-        var d = window.IdolProGame.loadDaily();
-        qs('coins').textContent = fmtNumber(w.coins);
-        qs('gems').textContent = fmtNumber(w.gems);
-        qs('tickets').textContent = String(d.liveTickets);
-        qs('hype').textContent = String(d.hype) + ' (' + String(d.snsPowerUsed) + '/3)';
+      function pushLog(message) {
+        logs.unshift(String(message || ''));
+        logs = logs.slice(0, 10);
       }
-
-      function showToast(message) {
-        var el = qs('toast');
-        el.textContent = message;
-        el.classList.add('show');
-        window.clearTimeout(showToast._t);
-        showToast._t = window.setTimeout(function () {
-          el.classList.remove('show');
-        }, 1600);
-      }
-
 
       function render() {
-        var s = window.IdolProGame.loadStats();
+        var state = window.IdolProGame.getState();
+        var idol = window.IdolProGame.getCurrentIdol();
 
-        qs('fans').textContent = fmtNumber(s.fans);
-        qs('vocal-text').textContent = String(s.vocal);
-        qs('dance-text').textContent = String(s.dance);
-        qs('expression-text').textContent = String(s.expression);
+        qs('coins').textContent = fmtNumber(state.coins);
+        qs('fans').textContent = fmtNumber(state.fans);
+        qs('gems').textContent = fmtNumber(state.gems);
 
-        qs('vocal-fill').style.width = statToPercent(s.vocal) + '%';
-        qs('dance-fill').style.width = statToPercent(s.dance) + '%';
-        qs('expression-fill').style.width = statToPercent(s.expression) + '%';
+        qs('idol-name').textContent = idol.name;
+        qs('idol-level').textContent = String(idol.level);
+        qs('idol-exp').textContent = String(idol.exp);
+        qs('vocal').textContent = String(idol.stats.vocal);
+        qs('dance').textContent = String(idol.stats.dance);
+        qs('expression').textContent = String(idol.stats.expression);
 
-        document.title = 'レッスン';
-        renderHeader();
-      }
-
-      function onLesson(typeLabel, typeKey) {
-        var result = window.IdolProGame.applyLesson(typeKey);
-        if (!result.ok) {
-          showToast('実行できません');
-          render();
-          return;
+        var logEl = qs('log');
+        logEl.innerHTML = '';
+        for (var i = 0; i < logs.length; i++) {
+          var li = document.createElement('li');
+          li.textContent = logs[i];
+          logEl.appendChild(li);
         }
-
-        render();
-        showToast(typeLabel + ' +' + result.delta.stat + ' / ファン +' + result.delta.fans + ' / coins +' + result.delta.coins);
       }
 
-      qs('lesson-vocal').addEventListener('click', function () {
-        onLesson('vocal', 'vocal');
-      });
-      qs('lesson-dance').addEventListener('click', function () {
-        onLesson('dance', 'dance');
-      });
-      qs('lesson-expression').addEventListener('click', function () {
-        onLesson('expression', 'expression');
-      });
+      function onClickMenu(menuKey) {
+        var result = window.IdolProGame.applyTraining(menuKey);
+        pushLog(result.message);
+        render();
+      }
+
+      var buttons = document.querySelectorAll('[data-menu]');
+      for (var i = 0; i < buttons.length; i++) {
+        (function (btn) {
+          btn.addEventListener('click', function () {
+            onClickMenu(btn.getAttribute('data-menu'));
+          });
+        })(buttons[i]);
+      }
 
       window.addEventListener('storage', function (e) {
         if (!e.key) return;
-        if (e.key === window.IdolProGame.WALLET_KEY ||
-            e.key === window.IdolProGame.DAILY_KEY ||
-            e.key === window.IdolProGame.STATS_KEY) {
-          render();
-        }
+        if (e.key === window.IdolProGame.STATE_KEY) render();
       });
 
       render();

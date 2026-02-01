@@ -7,9 +7,6 @@
   var WALLET_KEY = 'idol-pro:wallet';
   var INVENTORY_KEY = 'idol-pro:inventory';
   var SNS_KEY = 'idol-pro:sns';
-  var GAME_KEY = 'idol-pro:game';
-
-  var GAME_VERSION = 1;
 
   var COSTUMES = [
     { id: 'costume_common_casual01', name: 'カジュアル・ホワイト', rarity: 'COMMON', bonus: { fansPct: 0.00, liveSuccessPct: 0.00 } },
@@ -104,10 +101,6 @@
     return { postsToday: 0, lastPostDate: todayYmd(), hype: 0 };
   }
 
-  function createInitialGame() {
-    return { version: GAME_VERSION, pity: { coin: 0, gem: 0 } };
-  }
-
   function ensureInitialized() {
     // idols
     var idolsRaw = localStorage.getItem(STORAGE_KEY);
@@ -131,22 +124,6 @@
     var snsRaw = localStorage.getItem(SNS_KEY);
     if (!snsRaw) {
       localStorage.setItem(SNS_KEY, JSON.stringify(createInitialSns()));
-    }
-
-    // game
-    var gameRaw = localStorage.getItem(GAME_KEY);
-    if (!gameRaw) {
-      localStorage.setItem(GAME_KEY, JSON.stringify(createInitialGame()));
-    } else {
-      var gameObj = safeJsonParse(gameRaw, null);
-      if (!gameObj || typeof gameObj !== 'object' || gameObj.version !== GAME_VERSION) {
-        localStorage.setItem(GAME_KEY, JSON.stringify(createInitialGame()));
-      } else {
-        if (!gameObj.pity || typeof gameObj.pity !== 'object') gameObj.pity = { coin: 0, gem: 0 };
-        if (!Number.isFinite(gameObj.pity.coin)) gameObj.pity.coin = 0;
-        if (!Number.isFinite(gameObj.pity.gem)) gameObj.pity.gem = 0;
-        localStorage.setItem(GAME_KEY, JSON.stringify(gameObj));
-      }
     }
   }
 
@@ -262,22 +239,6 @@
     localStorage.setItem(INVENTORY_KEY, JSON.stringify(inv));
   }
 
-  function loadGameState() {
-    ensureInitialized();
-    var raw = localStorage.getItem(GAME_KEY);
-    var game = safeJsonParse(raw, null);
-    if (!game || typeof game !== 'object') game = createInitialGame();
-    if (!game.pity || typeof game.pity !== 'object') game.pity = { coin: 0, gem: 0 };
-    if (!Number.isFinite(game.pity.coin)) game.pity.coin = 0;
-    if (!Number.isFinite(game.pity.gem)) game.pity.gem = 0;
-    localStorage.setItem(GAME_KEY, JSON.stringify(game));
-    return game;
-  }
-
-  function saveGameState(game) {
-    localStorage.setItem(GAME_KEY, JSON.stringify(game));
-  }
-
   function getCostumeById(costumeId) {
     for (var i = 0; i < COSTUMES.length; i++) {
       if (COSTUMES[i].id === costumeId) return COSTUMES[i];
@@ -344,85 +305,6 @@
         fansPct: Number.isFinite(b.fansPct) ? b.fansPct : 0,
         liveSuccessPct: Number.isFinite(b.liveSuccessPct) ? b.liveSuccessPct : 0
       }
-    };
-  }
-
-  function rarityRoll() {
-    var r = Math.random();
-    if (r < 0.60) return 'COMMON';
-    if (r < 0.90) return 'RARE';
-    if (r < 0.99) return 'SR';
-    return 'SSR';
-  }
-
-  function pickRandomCostumeByRarity(rarity) {
-    var pool = [];
-    for (var i = 0; i < COSTUMES.length; i++) {
-      if (COSTUMES[i].rarity === rarity) pool.push(COSTUMES[i]);
-    }
-    if (pool.length === 0) return null;
-    return pool[randInt(0, pool.length - 1)];
-  }
-
-  function awardCostume(costume) {
-    var inv = loadInventory();
-    if (!inv.costumes[costume.id]) inv.costumes[costume.id] = { owned: true, qty: 0 };
-    if (!Number.isFinite(inv.costumes[costume.id].qty)) inv.costumes[costume.id].qty = 0;
-    inv.costumes[costume.id].owned = true;
-    inv.costumes[costume.id].qty += 1;
-    saveInventory(inv);
-  }
-
-  function rollGacha(currency, count) {
-    var isCoin = currency === 'coin';
-    var isGem = currency === 'gem';
-    if (!isCoin && !isGem) return { ok: false, reason: 'invalid-currency' };
-
-    var n = Math.max(1, Math.floor(count || 1));
-    if (n !== 1 && n !== 10) n = 1;
-
-    var wallet = loadWallet();
-    var game = loadGameState();
-    var price = 0;
-    if (isCoin) price = n === 10 ? 1800 : 200;
-    if (isGem) price = n === 10 ? 900 : 100;
-
-    if (isCoin && wallet.coins < price) return { ok: false, reason: 'not-enough', wallet: wallet };
-    if (isGem && wallet.gems < price) return { ok: false, reason: 'not-enough', wallet: wallet };
-
-    if (isCoin) wallet.coins -= price;
-    if (isGem) wallet.gems -= price;
-    saveWallet(wallet);
-
-    var results = [];
-    for (var i = 0; i < n; i++) {
-      var pityKey = isCoin ? 'coin' : 'gem';
-      game.pity[pityKey] = Math.max(0, Math.floor(game.pity[pityKey] || 0)) + 1;
-
-      var rarity = rarityRoll();
-      if (game.pity[pityKey] >= 50) rarity = 'SSR';
-
-      var costume = pickRandomCostumeByRarity(rarity);
-      if (!costume) costume = pickRandomCostumeByRarity('COMMON');
-      if (!costume) return { ok: false, reason: 'no-costumes' };
-
-      if (costume.rarity === 'SSR') {
-        game.pity[pityKey] = 0;
-      }
-
-      awardCostume(costume);
-      results.push(costume);
-    }
-
-    saveGameState(game);
-    return {
-      ok: true,
-      currency: currency,
-      count: n,
-      paid: price,
-      wallet: loadWallet(),
-      pity: { coin: game.pity.coin, gem: game.pity.gem },
-      results: results
     };
   }
 
@@ -588,7 +470,6 @@
     WALLET_KEY: WALLET_KEY,
     INVENTORY_KEY: INVENTORY_KEY,
     SNS_KEY: SNS_KEY,
-    GAME_KEY: GAME_KEY,
     loadIdols: loadIdols,
     saveIdols: saveIdols,
     getIdolById: getIdolById,
@@ -601,14 +482,11 @@
     addGems: addGems,
     loadInventory: loadInventory,
     saveInventory: saveInventory,
-    loadGameState: loadGameState,
-    saveGameState: saveGameState,
     getCostumeById: getCostumeById,
     getOwnedCostumes: getOwnedCostumes,
     getEquippedCostumeId: getEquippedCostumeId,
     getEquippedBonus: getEquippedBonus,
     equipCostume: equipCostume,
-    rollGacha: rollGacha,
     computeLiveChance: computeLiveChance,
     runLive: runLive,
     COSTUMES: COSTUMES
@@ -622,14 +500,17 @@
 (function () {
   'use strict';
 
+  var legacy = window.IdolProGame;
+
   var WALLET_KEY = 'idol-pro:wallet';
   var DAILY_KEY = 'idol-pro:daily';
   var STATS_KEY = 'idol-pro:stats';
   var EQUIPPED_KEY = 'idol-pro:equipped';
 
-  // reuse legacy keys for gacha ownership
+  var SUBSCRIPTION_KEY = 'idol-pro:subscription';
+
+  // keep legacy inventory key (used for items)
   var LEGACY_INVENTORY_KEY = 'idol-pro:inventory';
-  var LEGACY_GAME_KEY = 'idol-pro:game';
 
   // Costume master (keep the existing one if available)
   var COSTUMES = (legacy && legacy.COSTUMES) ? legacy.COSTUMES : [];
@@ -685,6 +566,80 @@
     return { costumeId: null };
   }
 
+  function normalizePlan(value) {
+    var v = String(value || '').toLowerCase();
+    if (v === 'premium') return 'premium';
+    if (v === 'basic') return 'basic';
+    return 'free';
+  }
+
+  function planRank(plan) {
+    var p = normalizePlan(plan);
+    if (p === 'premium') return 2;
+    if (p === 'basic') return 1;
+    return 0;
+  }
+
+  function getSubscriptionPlan() {
+    ensureInitialized();
+    return normalizePlan(localStorage.getItem(SUBSCRIPTION_KEY));
+  }
+
+  function setSubscriptionPlan(nextPlan) {
+    var p = normalizePlan(nextPlan);
+    localStorage.setItem(SUBSCRIPTION_KEY, p);
+    ensureEquippedValid();
+    return p;
+  }
+
+  var FREE_COSTUME_IDS = [
+    'costume_common_casual01'
+  ];
+
+  var BASIC_COSTUME_IDS = [
+    'costume_common_casual02',
+    'costume_common_sport01',
+    'costume_common_stage01',
+    'costume_common_hoodie01',
+    'costume_rare_pop01'
+  ];
+
+  function getRequiredPlanForCostumeId(costumeId) {
+    var id = String(costumeId || '');
+    for (var i = 0; i < FREE_COSTUME_IDS.length; i++) {
+      if (FREE_COSTUME_IDS[i] === id) return 'free';
+    }
+    for (var j = 0; j < BASIC_COSTUME_IDS.length; j++) {
+      if (BASIC_COSTUME_IDS[j] === id) return 'basic';
+    }
+    return 'premium';
+  }
+
+  function isPlanSufficient(currentPlan, requiredPlan) {
+    return planRank(currentPlan) >= planRank(requiredPlan);
+  }
+
+  function ensureEquippedValid() {
+    // NOTE: Must not call loadEquipped()/ensureInitialized() to avoid recursion.
+    var raw = localStorage.getItem(EQUIPPED_KEY);
+    var e = safeJsonParse(raw, createInitialEquipped());
+    if (!e || typeof e !== 'object') e = createInitialEquipped();
+    if (e.costumeId === undefined) e.costumeId = null;
+    if (e.costumeId !== null) e.costumeId = String(e.costumeId);
+
+    if (!e.costumeId) {
+      localStorage.setItem(EQUIPPED_KEY, JSON.stringify(e));
+      return;
+    }
+
+    var required = getRequiredPlanForCostumeId(e.costumeId);
+    var current = normalizePlan(localStorage.getItem(SUBSCRIPTION_KEY));
+    if (!isPlanSufficient(current, required)) {
+      e.costumeId = null;
+      localStorage.setItem(EQUIPPED_KEY, JSON.stringify(e));
+    }
+  }
+
   function ensureInitialized() {
     if (!localStorage.getItem(WALLET_KEY)) {
       localStorage.setItem(WALLET_KEY, JSON.stringify(createInitialWallet()));
@@ -694,6 +649,10 @@
     }
     if (!localStorage.getItem(EQUIPPED_KEY)) {
       localStorage.setItem(EQUIPPED_KEY, JSON.stringify(createInitialEquipped()));
+    }
+
+    if (!localStorage.getItem(SUBSCRIPTION_KEY)) {
+      localStorage.setItem(SUBSCRIPTION_KEY, 'free');
     }
 
     var today = todayYmd();
@@ -722,6 +681,8 @@
     daily.snsPowerUsed = clamp(Math.floor(daily.snsPowerUsed), 0, 99);
     daily.hype = clamp(Math.floor(daily.hype), 0, 999);
     localStorage.setItem(DAILY_KEY, JSON.stringify(daily));
+
+    ensureEquippedValid();
   }
 
   function loadWallet() {
@@ -817,19 +778,31 @@
   }
 
   function getOwnedCostumes() {
-    var raw = localStorage.getItem(LEGACY_INVENTORY_KEY);
-    if (!raw) return [];
-    var inv = safeJsonParse(raw, null);
-    if (!inv || !inv.costumes) return [];
-
+    // Backward-compatible name: returns "currently usable" costumes by subscription.
+    var plan = getSubscriptionPlan();
     var result = [];
     for (var i = 0; i < COSTUMES.length; i++) {
       var c = COSTUMES[i];
-      var entry = inv.costumes[c.id];
-      if (!entry || !Number.isFinite(entry.qty) || entry.qty <= 0) continue;
-      result.push({ costume: c, qty: entry.qty });
+      var required = getRequiredPlanForCostumeId(c.id);
+      if (!isPlanSufficient(plan, required)) continue;
+      result.push({ costume: c, qty: 1 });
     }
     return result;
+  }
+
+  function getCostumeCatalog() {
+    var plan = getSubscriptionPlan();
+    var list = [];
+    for (var i = 0; i < COSTUMES.length; i++) {
+      var c = COSTUMES[i];
+      var required = getRequiredPlanForCostumeId(c.id);
+      list.push({
+        costume: c,
+        requiredPlan: required,
+        available: isPlanSufficient(plan, required)
+      });
+    }
+    return list;
   }
 
   function setEquippedCostume(costumeIdOrNull) {
@@ -844,10 +817,11 @@
     var costume = getCostumeById(costumeId);
     if (!costume) return { ok: false, reason: 'invalid-costume' };
 
-    // ownership check via legacy inventory
-    var inv = loadLegacyInventory();
-    var qty = inv.costumes[costumeId] && Number.isFinite(inv.costumes[costumeId].qty) ? inv.costumes[costumeId].qty : 0;
-    if (qty <= 0) return { ok: false, reason: 'not-owned' };
+    var required = getRequiredPlanForCostumeId(costumeId);
+    var current = getSubscriptionPlan();
+    if (!isPlanSufficient(current, required)) {
+      return { ok: false, reason: 'requires-plan', requiredPlan: required, currentPlan: current };
+    }
 
     e.costumeId = costumeId;
     saveEquipped(e);
@@ -855,6 +829,7 @@
   }
 
   function getEquippedBonus() {
+    ensureEquippedValid();
     var e = loadEquipped();
     if (!e.costumeId) return { costume: null, bonus: { fansPct: 0, liveSuccessPct: 0, score: 0 } };
     var c = getCostumeById(e.costumeId);
@@ -991,23 +966,181 @@
     };
   }
 
-  // Keep rollGacha from previous implementation (still uses legacy inventory/pity).
-  function rollGacha(currency, count) {
-    if (!legacy || !legacy.rollGacha) {
-      return { ok: false, reason: 'gacha-unavailable' };
-    }
-    return legacy.rollGacha(currency, count);
+  // ───────────────────────────────────────────────────────────
+  // Training v2 (no stamina): unified state model
+  // ───────────────────────────────────────────────────────────
+  var STATE_KEY = 'idol-pro:state';
+
+  function initState() {
+    var state = {
+      coins: 0,
+      fans: 0,
+      gems: 0,
+      currentIdolId: 'luna',
+      idols: {
+        luna: {
+          id: 'luna',
+          name: 'ルナ',
+          stats: { vocal: 10, dance: 10, expression: 10 },
+          level: 1,
+          exp: 0
+        }
+      }
+    };
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    // mirror for legacy UI bits (e.g. dashboard coin/gem display)
+    localStorage.setItem('coins', String(state.coins));
+    localStorage.setItem('gems', String(state.gems));
+    localStorage.setItem('fans', String(state.fans));
+    return state;
   }
 
-  function loadLegacyGame() {
-    var raw = localStorage.getItem(LEGACY_GAME_KEY);
-    var g = safeJsonParse(raw, null);
-    if (!g || typeof g !== 'object') g = { version: 1, pity: { coin: 0, gem: 0 } };
-    if (!g.pity || typeof g.pity !== 'object') g.pity = { coin: 0, gem: 0 };
-    if (!Number.isFinite(g.pity.coin)) g.pity.coin = 0;
-    if (!Number.isFinite(g.pity.gem)) g.pity.gem = 0;
-    localStorage.setItem(LEGACY_GAME_KEY, JSON.stringify(g));
-    return g;
+  function normalizeState(state) {
+    if (!state || typeof state !== 'object') return initState();
+
+    if (!Number.isFinite(state.coins)) state.coins = 0;
+    if (!Number.isFinite(state.fans)) state.fans = 0;
+    if (!Number.isFinite(state.gems)) state.gems = 0;
+    state.coins = Math.max(0, Math.floor(state.coins));
+    state.fans = Math.max(0, Math.floor(state.fans));
+    state.gems = Math.max(0, Math.floor(state.gems));
+
+    if (!state.currentIdolId) state.currentIdolId = 'luna';
+    state.currentIdolId = String(state.currentIdolId);
+
+    if (!state.idols || typeof state.idols !== 'object') state.idols = {};
+    var id = state.currentIdolId;
+    if (!state.idols[id] || typeof state.idols[id] !== 'object') {
+      // ensure at least one idol exists
+      state.idols.luna = {
+        id: 'luna',
+        name: 'ルナ',
+        stats: { vocal: 10, dance: 10, expression: 10 },
+        level: 1,
+        exp: 0
+      };
+      state.currentIdolId = 'luna';
+    }
+
+    var idol = state.idols[state.currentIdolId];
+    if (!idol.stats || typeof idol.stats !== 'object') idol.stats = { vocal: 10, dance: 10, expression: 10 };
+    if (!Number.isFinite(idol.stats.vocal)) idol.stats.vocal = 10;
+    if (!Number.isFinite(idol.stats.dance)) idol.stats.dance = 10;
+    if (!Number.isFinite(idol.stats.expression)) idol.stats.expression = 10;
+    idol.stats.vocal = Math.max(0, Math.floor(idol.stats.vocal));
+    idol.stats.dance = Math.max(0, Math.floor(idol.stats.dance));
+    idol.stats.expression = Math.max(0, Math.floor(idol.stats.expression));
+
+    if (!Number.isFinite(idol.level)) idol.level = 1;
+    if (!Number.isFinite(idol.exp)) idol.exp = 0;
+    idol.level = Math.max(1, Math.floor(idol.level));
+    idol.exp = Math.max(0, Math.floor(idol.exp));
+
+    if (!idol.id) idol.id = state.currentIdolId;
+    idol.id = String(idol.id);
+    if (!idol.name) idol.name = 'ルナ';
+    idol.name = String(idol.name);
+
+    return state;
+  }
+
+  function getState() {
+    var raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return initState();
+    var parsed = safeJsonParse(raw, null);
+    var state = normalizeState(parsed);
+    // persist normalized form
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    return state;
+  }
+
+  function saveState(state) {
+    var s = normalizeState(state);
+    localStorage.setItem(STATE_KEY, JSON.stringify(s));
+    // mirror for legacy UI bits
+    localStorage.setItem('coins', String(s.coins));
+    localStorage.setItem('gems', String(s.gems));
+    localStorage.setItem('fans', String(s.fans));
+    return s;
+  }
+
+  function getCurrentIdol() {
+    var s = getState();
+    return s.idols[s.currentIdolId];
+  }
+
+  function levelUpIfNeeded(state, idol) {
+    var leveled = 0;
+    while (idol.exp >= 100) {
+      idol.exp -= 100;
+      idol.level += 1;
+      idol.stats.vocal += 1;
+      idol.stats.dance += 1;
+      idol.stats.expression += 1;
+      leveled += 1;
+    }
+    return leveled;
+  }
+
+  function applyTraining(menuKey) {
+    var key = String(menuKey || '');
+    var parts = key.split('_');
+    if (parts.length !== 2) return { deltaStats: {}, coinsDelta: 0, message: 'メニューが不正です' };
+
+    var mode = parts[0];
+    var statKey = parts[1];
+    var validMode = (mode === 'basic' || mode === 'hard');
+    var validStat = (statKey === 'vocal' || statKey === 'dance' || statKey === 'expression');
+    if (!validMode || !validStat) return { deltaStats: {}, coinsDelta: 0, message: 'メニューが不正です' };
+
+    var state = getState();
+    var idol = state.idols[state.currentIdolId];
+    if (!idol) {
+      state = initState();
+      idol = state.idols[state.currentIdolId];
+    }
+
+    var delta = 0;
+    var expDelta = 0;
+    if (mode === 'basic') {
+      delta = randInt(1, 3);
+      expDelta = 10;
+    } else {
+      delta = randInt(-1, 6);
+      expDelta = 15;
+    }
+
+    var before = idol.stats[statKey];
+    idol.stats[statKey] = Math.max(0, Math.floor(before + delta));
+    var applied = idol.stats[statKey] - before;
+
+    idol.exp += expDelta;
+    var upCount = levelUpIfNeeded(state, idol);
+
+    var coinsDelta = 0;
+    var hardSuccess = (mode === 'hard' && applied > 0);
+    if (hardSuccess) {
+      coinsDelta = randInt(5, 15);
+      state.coins = Math.max(0, state.coins + coinsDelta);
+    }
+
+    saveState(state);
+
+    var statLabel = (statKey === 'vocal') ? '歌' : (statKey === 'dance') ? 'ダンス' : '表現';
+    var modeLabel = (mode === 'basic') ? '基本' : '強化';
+    var msg = modeLabel + '育成（' + statLabel + '）: ' + (applied >= 0 ? '+' : '') + String(applied) + ' / 経験値 +' + String(expDelta);
+    if (coinsDelta > 0) msg += ' / コイン +' + String(coinsDelta);
+    if (upCount > 0) msg += ' / レベルアップ +' + String(upCount);
+
+    return {
+      deltaStats: (function () {
+        var o = {};
+        o[statKey] = applied;
+        return o;
+      })(),
+      coinsDelta: coinsDelta,
+      message: msg
+    };
   }
 
   window.IdolProGame = {
@@ -1016,9 +1149,10 @@
     STATS_KEY: STATS_KEY,
     EQUIPPED_KEY: EQUIPPED_KEY,
 
-    // legacy (gacha compatibility)
+    SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+
+    // legacy key (items only)
     INVENTORY_KEY: LEGACY_INVENTORY_KEY,
-    GAME_KEY: LEGACY_GAME_KEY,
 
     loadWallet: loadWallet,
     saveWallet: saveWallet,
@@ -1041,12 +1175,20 @@
     setEquippedCostume: setEquippedCostume,
     getEquippedBonus: getEquippedBonus,
     getOwnedCostumes: getOwnedCostumes,
+    getCostumeCatalog: getCostumeCatalog,
+
+    getSubscriptionPlan: getSubscriptionPlan,
+    setSubscriptionPlan: setSubscriptionPlan,
 
     computeLiveScore: computeLiveScore,
     runLive: runLive,
 
-    rollGacha: rollGacha,
-    loadLegacyGame: loadLegacyGame,
-    loadGameState: loadLegacyGame
+    // Training v2 state APIs
+    STATE_KEY: STATE_KEY,
+    initState: initState,
+    getState: getState,
+    saveState: saveState,
+    getCurrentIdol: getCurrentIdol,
+    applyTraining: applyTraining
   };
 })();

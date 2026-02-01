@@ -35,6 +35,13 @@ body {
   gap: 14px;
 }
 
+/* Mobile-first narrow layouts (e.g. training page) */
+.container-narrow {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -137,6 +144,51 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.btn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.training-stats {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.training-stat {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.training-stat .k {
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.training-stat .v {
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.loglist {
+  margin: 0;
+  padding: 0 0 0 18px;
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .tile {
@@ -632,6 +684,52 @@ body {
   font-size: 11px;
   font-weight: 900;
   color: var(--muted);
+}
+
+/* Modal (プラン案内) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(17, 24, 39, 0.35);
+  z-index: 50;
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.modal-body {
+  margin: 0 0 12px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 900px) {
